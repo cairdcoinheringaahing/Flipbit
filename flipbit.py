@@ -52,6 +52,9 @@ def run(code, inputs, debug, super_debug):
 				iindex += 1
 			else:
 				tape[tindex] = 0
+		if char == '?':
+			iindex += 8
+			tape[tindex:tindex+8] = stream[iindex-8:iindex]
 		if char == '.':
 			num = tape[:tindex+1]
 			print(end=from_binary(num)+'\n'*super_debug)
