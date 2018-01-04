@@ -14,20 +14,16 @@ def from_binary(array):
 		total += mul * array[i]
 	return chr(total)
 
-def nth_index(string, substring, N, reverse):
+def nth_index(string, substring, N):
 	if string.count(substring) < N:
 		return -1
-	string = string[::reverse]
 	found = 0
 	for i in range(len(string)):
 		char = string[i]
 		if substring == char:
 			found += 1
 		if found == N:
-			if reverse < 0:
-				return len(string) - i
-			else:
-				return i
+			return i
 	return -1
 
 def run(code, inputs, debug, super_debug):
@@ -61,10 +57,10 @@ def run(code, inputs, debug, super_debug):
 		if char == '[':
 			loop_depth += 1
 			if not tape[tindex]:
-				pindex = nth_index(code, ']', loop_depth, -1)
+				pindex = nth_index(code, ']', loop_depth)
 		if char == ']':
 			if tape[tindex]:
-				pindex = nth_index(code, '[', loop_depth, 1)
+				pindex = nth_index(code, '[', loop_depth)
 			else:
 				loop_depth -= 1
 		if char == '#' and debug:
