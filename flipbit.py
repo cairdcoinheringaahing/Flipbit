@@ -33,6 +33,7 @@ def run(code, inputs, debug, super_debug):
 	tindex = 0
 	loop_depth = 0
 	tape = [0] * 3000
+	store = -1
 	while pindex < len(code):
 		char = code[pindex]
 		if char == '^':
@@ -41,11 +42,14 @@ def run(code, inputs, debug, super_debug):
 			tindex += 1
 		if char == '<':
 			tindex -= 1
-			tindex %= 3000
+			if tindex < 0:
+				tindex = 0
+				tape[tindex] = 0
 		if char == ',':
 			if iindex < len(stream):
 				tape[tindex] = stream[iindex]
 				iindex += 1
+				tindex += 1
 			else:
 				tape[tindex] = 0
 		if char == '?':
@@ -56,11 +60,12 @@ def run(code, inputs, debug, super_debug):
 			print(end=from_binary(num)+'\n'*super_debug)
 		if char == '[':
 			loop_depth += 1
+			store = pindex
 			if not tape[tindex]:
 				pindex = nth_index(code, ']', loop_depth)
 		if char == ']':
 			if tape[tindex]:
-				pindex = nth_index(code, '[', loop_depth)
+				pindex = nth_index(code[store:], '[', loop_depth) + store
 			else:
 				loop_depth -= 1
 		if char == '#' and debug:
@@ -73,7 +78,7 @@ def run(code, inputs, debug, super_debug):
 
 	index = ''.join(map(str, tape)).rindex('1') if (''.join(map(str, tape)).rindex('1') + 1) > tindex else tindex
 	if debug:
-		print('\n', tape[:index+1], sep='')
+		print('\n' * ('.' in code), tape[:index+1], sep='')
 
 if __name__ == '__main__':
 	run(sys.argv[1], sys.stdin.read(), '-d' in sys.argv[2:], '--debug' in sys.argv[2:])
