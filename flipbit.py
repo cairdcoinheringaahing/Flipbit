@@ -69,7 +69,7 @@ def run(code, inputs, debug, super_debug):
 				print('\n', tape[:index+1], sep='')
 		pindex += 1
 		if super_debug:
-			print(('%s %s %-{}s %-2s %s').format(len(str(len(code)))) % (char, depth, pindex, tindex, tape[:tindex+1]))
+			print(('%s %s %-{}s %-2s %s').format(len(str(len(code)))) % (char, loop_depth, pindex, tindex, tape[:tindex+1]))
 
 	index = ''.join(map(str, tape)).rindex('1') if (''.join(map(str, tape)).rindex('1') + 1) > tindex else tindex
 	if debug:
