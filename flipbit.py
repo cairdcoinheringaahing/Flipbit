@@ -35,7 +35,7 @@ def run(code, inputs, debug, super_debug):
                 try:
                     tape[tindex] = int(inputs[iindex+1][ibit])
                     iindex += 1
-                    ibit = 0
+                    ibit = 1
                     tindex += 1
                 except IndexError: # if no more chars, return 0
                     tape[tindex] = 0
