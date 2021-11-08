@@ -33,7 +33,7 @@ def run(code, inputs, debug, super_debug):
                 tindex += 1
             except IndexError: # if no more bits, go to the next input char
                 try:
-                    tape[tindex] = int(inputs[iindex+1][ibit])
+                    tape[tindex] = int(inputs[iindex+1][0])
                     iindex += 1
                     ibit = 1
                     tindex += 1
