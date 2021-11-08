@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 
 def run(code, inputs, debug, super_debug):
+    print('')
     inputs = list(map(lambda x:str(bin(ord(x))[2:]).zfill(8), inputs))
 
     pindex = 0
@@ -31,12 +32,12 @@ def run(code, inputs, debug, super_debug):
                 ibit += 1
                 tindex += 1
             except IndexError: # if no more bits, go to the next input char
-                if iindex < len(inputs):
+                try:
+                    tape[tindex] = int(inputs[iindex+1][ibit])
                     iindex += 1
                     ibit = 0
-                    tape[tindex] = int(inputs[iindex][ibit])
                     tindex += 1
-                else: # if no more chars, return 0
+                except IndexError: # if no more chars, return 0
                     tape[tindex] = 0
         elif char == '?': # charwise input
             try:
