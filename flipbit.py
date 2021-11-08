@@ -1,84 +1,96 @@
 import sys
-
-def to_binary(*args):
-	final = []
-	for arg in args:
-		for element in list(map(int, bin(ord(arg))[2:])):
-			final.append(element)
-	return final
-
-def from_binary(array):
-	total = 0
-	for i in range(len(array)):
-		mul = 2 ** (len(array) - i - 1)
-		total += mul * array[i]
-	return chr(total)
-
-def nth_index(string, substring, N):
-	if string.count(substring) < N:
-		return -1
-	found = 0
-	for i in range(len(string)):
-		char = string[i]
-		if substring == char:
-			found += 1
-		if found == N:
-			return i
-	return -1
+from collections import defaultdict
 
 def run(code, inputs, debug, super_debug):
-	stream = list(to_binary(*inputs))
-	pindex = 0
-	iindex = 0
-	tindex = 0
-	loop_depth = 0
-	tape = [0] * 3000
-	store = -1
-	while pindex < len(code):
-		char = code[pindex]
-		if char == '^':
-			tape[tindex] ^= 1
-		if char == '>':
-			tindex += 1
-		if char == '<':
-			tindex -= 1
-			if tindex < 0:
-				tindex = 0
-				tape[tindex] = 0
-		if char == ',':
-			if iindex < len(stream):
-				tape[tindex] = stream[iindex]
-				iindex += 1
-				tindex += 1
-			else:
-				tape[tindex] = 0
-		if char == '?':
-			iindex += 8
-			tape[tindex:tindex+8] = stream[iindex-8:iindex]
-		if char == '.':
-			num = tape[:tindex+1]
-			print(end=from_binary(num)+'\n'*super_debug)
-		if char == '[':
-			loop_depth += 1
-			store = pindex
-			if not tape[tindex]:
-				pindex = nth_index(code, ']', loop_depth)
-		if char == ']':
-			if tape[tindex]:
-				pindex = nth_index(code[store:], '[', loop_depth) + store
-			else:
-				loop_depth -= 1
-		if char == '#' and debug:
-			index = ''.join(map(str, tape)).rindex('1') if (''.join(map(str, tape)).rindex('1') + 1) > tindex else tindex
-			if debug:
-				print('\n', tape[:index+1], sep='')
-		pindex += 1
-		if super_debug:
-			print(('%s %s %-{}s %-2s %s').format(len(str(len(code)))) % (char, loop_depth, pindex, tindex, tape[:tindex+1]))
+    inputs = list(map(lambda x:str(bin(ord(x))[2:]).zfill(8), inputs))
 
-	index = ''.join(map(str, tape)).rindex('1') if (''.join(map(str, tape)).rindex('1') + 1) > tindex else tindex
-	if debug:
-		print('\n' * ('.' in code), tape[:index+1], sep='')
+    pindex = 0
+    tindex = 0
+    iindex = 0
+    ibit = 0
 
-if __name__ == '__main__':
-	run(sys.argv[1], sys.stdin.read(), '-d' in sys.argv[2:], '--debug' in sys.argv[2:])
+    loop_starts = []
+
+    tape = defaultdict(int)
+
+    while pindex < len(code):
+        char = code[pindex]
+        if char == '^': # flip the bit
+            tape[tindex] ^= 1
+        elif char == '>': # move right
+            tindex += 1
+            tape[tindex] = tape[tindex] # initialize any new tape cells
+        elif char == '<': # move left
+            tindex -= 1
+            if tindex < 0:
+                tindex = 0
+                tape[tindex] = 0
+        elif char == ',': # bitwise input
+            try:
+                tape[tindex] = int(inputs[iindex][ibit]) # get the next bit of the current input char
+                ibit += 1
+                tindex += 1
+            except IndexError: # if no more bits, go to the next input char
+                if iindex < len(inputs):
+                    iindex += 1
+                    ibit = 0
+                    tape[tindex] = int(inputs[iindex][ibit])
+                    tindex += 1
+                else: # if no more chars, return 0
+                    tape[tindex] = 0
+        elif char == '?': # charwise input
+            try:
+                if ibit < len(inputs[iindex]): # get the remaining bits of the current input char
+                    for i in range(len(inputs[iindex][ibit:])):
+                        tape[tindex+i] = int(inputs[iindex][ibit])
+                        ibit += 1
+                    iindex += 1
+                    ibit = 0
+                else: # if no more bits, get the next input char
+                    iindex += 1
+                    ibit = 0
+                    for i in range(len(inputs[iindex])):
+                        tape[tindex+i] = int(inputs[iindex][ibit])
+                        ibit += 1
+                    iindex += 1
+                    ibit = 0
+            except IndexError: # if no more chars, return 8 0s
+                for i in range(8):
+                    tape[tindex+i] = 0
+        elif char == '.':
+            print(end=chr(int(''.join(map(str, list(tape.values())[:tindex+1])), 2))+'\n'*super_debug)
+        elif char == '[':
+            loop_starts.append(pindex)
+            if not tape[tindex]: # skip to matching bracket if current bit is 0
+                depth = 1
+                while depth and pindex < len(code):
+                    if code[pindex+1] == '[':
+                        depth += 1
+                    elif code[pindex+1] == ']':
+                        depth -= 1
+                    pindex += 1
+        elif char == ']':
+            pindex = loop_starts.pop()-1
+        elif char == '#' and debug:
+            try:
+                if (''.join(map(str, tape.values())).rindex('1') + 1) > tindex:
+                    index = ''.join(map(str, tape.values())).rindex('1')
+                else: index = tindex
+            except:
+                index = tindex
+            print('\n', tape[:index+1], sep='')
+        pindex += 1
+        if super_debug:
+            print(('%s %s %-{}s %-2s %s').format(len(str(len(code)))) % (char, len(loop_starts), pindex, tindex, list(tape.values())[:tindex+1]))
+    try:
+        if (''.join(map(str, tape.values())).rindex('1') + 1) > tindex:
+            index = ''.join(map(str, tape.values())).rindex('1')
+        else:
+            index = tindex
+    except:
+        index = tindex
+    if debug:
+        print('\n' * ('.' in code), tape[:index+1], sep='')
+
+if __name__=='__main__':
+    run(sys.argv[1], sys.stdin.read(), '-d' in sys.argv[2:], '--debug' in sys.argv[2:])
