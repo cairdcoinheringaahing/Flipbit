@@ -90,7 +90,7 @@ def run(code, inputs, debug, super_debug):
     except:
         index = tindex
     if debug:
-        print('\n' * ('.' in code), tape[:index+1], sep='')
+        print('\n' * ('.' in code), list(tape.values())[:index+1], sep='')
 
 if __name__=='__main__':
     run(sys.argv[1], sys.stdin.read(), '-d' in sys.argv[2:], '--debug' in sys.argv[2:])
